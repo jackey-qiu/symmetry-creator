@@ -2,7 +2,7 @@ import wx
 import sys
 sys.path.append('Y:\\codes\\my code\\symmetry creator')
 import symmetry_creator_test4 as sym
-
+import numpy as num
 class sym_creator_gui(wx.Frame):
     def __init__(self,parent,id,title):
         frame=wx.Frame.__init__(self,parent,id,title,size=(480,615))
