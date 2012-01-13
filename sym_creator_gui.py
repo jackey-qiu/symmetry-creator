@@ -3,11 +3,12 @@ import sys
 sys.path.append('Y:\\codes\\my code\\symmetry creator')
 import symmetry_creator_test4 as sym
 import numpy as num
+#I add line1
+#I add line2
 class sym_creator_gui(wx.Frame):
     def __init__(self,parent,id,title):
         frame=wx.Frame.__init__(self,parent,id,title,size=(480,615))
         p1=wx.Panel(self)
-        
         bt_calculate_id=1
         bt_get_sym_id=2
         bt_print_id=3
