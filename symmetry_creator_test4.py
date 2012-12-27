@@ -1,5 +1,8 @@
 import numpy as num
 from numpy.linalg import inv
+'''
+updated from version 4: when calculate the atoms within unit cell, set the limit to [0,1) instead of [0,1] since 0 and 1 are symmetrically the same
+'''
 """
 Sym_creator is developped to generate symmetry operations for surface unit cell, it can also generate p1 atoms for bulk cell and surface cell
 #########globals########
@@ -16,8 +19,9 @@ self.sym_surf_new_ref:symmetry operation of surface atoms for user defined refer
 #############################
 print_file will create four text files, surface atom positions in fractional and angstrom, bulk atom positions in fractional and angstrom
 """
+#just test the github
 class sym_creator():
-    def __init__(self,bulk_cell=[5.038,5.038,13.772],surf_cell=[5.038,5.434,7.3707],bulk_to_surf=[[1.,1.,0.],[-0.3333,0.333,0.333],[0.713,-0.713,0.287]],asym_atm={'Fe':(0.,0.,0.3553),'O':(0.3059,0.,0.25)},sym_file='c:\\python26\\symmetry of hematite.txt'):
+    def __init__(self,bulk_cell=[5.038,5.038,13.772],surf_cell=[5.038,5.434,7.3707],bulk_to_surf=[[1.,1.,0.],[-0.3333,0.333,0.333],[0.713,-0.713,0.287]],asym_atm={'Fe':(0.,0.,0.3553),'O':(0.3059,0.,0.25)},sym_file='D:\\Programming codes\\geometry codes\\symmetry-creator\\symmetry of hematite.txt'):
         self.bulk_cell=bulk_cell
         self.surf_cell=surf_cell
         self.bulk_to_surf=bulk_to_surf
@@ -75,7 +79,7 @@ class sym_creator():
                         temp[2]=num.round(temp[2],3)
                         if temp not in atm_container:
                             temp=num.array(temp)
-                            tf=(temp>=0.)&(temp<=1.)
+                            tf=(temp>=0.)&(temp<1.)
                             if (int(tf[0])+int(tf[1])+int(tf[2]))==3:
                                 atm_container.append(list(temp))
         return atm_container
@@ -98,7 +102,7 @@ class sym_creator():
                             temp[2]=num.round(temp[2],3)
                             if temp not in atm_container:
                                 temp=num.array(temp)
-                                tf=(temp>=0.)&(temp<=1.)
+                                tf=(temp>=0.)&(temp<1.)
                                 if (int(tf[0])+int(tf[1])+int(tf[2]))==3:
                                     atm_container.append(list(temp))
                                     sym_container.append(temp_sym)
@@ -117,6 +121,9 @@ class sym_creator():
         return atm_container,sym_container
         
     def set_new_ref_atm_surf(self,el=['Fe','O'],rn=[0,1,2],print_file=False):
+    #know the algorithem,T1A0+T1t=A1-->T1A0=A1-T1t-->iT1(T1A0)=A0=iT1(A1-T1t), for TnA0+Tnt=An,
+    #just plug in the A0, here T1 is operation matrix,T1t is tranlation item,A0 is asymmetry atm and A1 is the ref atm
+    #Basic idea is calculate the asymmetry atm from the reference atm and cal the coors for the other atms
         for element in el:
             for ref_N in rn:
                 sym=num.copy(self.sym_surf[element])
@@ -136,12 +143,28 @@ class sym_creator():
                     sym_output=sym_output[1::]
                     num.savetxt(element+str(ref_N)+' output file for Genx reading.txt', sym_output, delimiter=',')
     
+
     def set_ref_all(self,print_file=False):    
         for i in self.atm_p1_surf.keys():
             for j in range(len(self.atm_p1_surf[i])):
                 self.set_new_ref_atm_surf(el=[i],rn=[j],print_file=print_file)
                 #print self.sym_surf_new_ref[i][j]
             
+    def ouput_sym_file_new(self,el='O',print_file=False):
+    #new function added after to extract sym data based on that dxdy shift at each layer won't affect dz,
+    #and dz shift won't affect dxdy shift, the reference layer for atoms at one layer is now one of the atom at the same layer
+        sym_output=num.array([[0,0,0,0,0,0,0,0,0]],dtype=float)
+        for i in [0,3,6,9]:
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i][0:3,0:3].transpose().reshape(1,9),axis=0)
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i+1][0:3,0:3].transpose().reshape(1,9),axis=0)
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i+2][0:3,0:3].transpose().reshape(1,9),axis=0)
+        sym_output=sym_output[1::]
+        for i in range(len(sym_output)):
+            for j in [2,5,6,7]:
+                sym_output[i][j]=0.
+        if print_file==True:num.savetxt(el+' output file for Genx reading.txt', sym_output, delimiter=',')
+        return sym_output
+    
     def cal_coor(self,ref_N,element):
     #this function is for test purpose
         asym=self.atm_p1_surf[element][ref_N]
