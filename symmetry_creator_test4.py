@@ -150,17 +150,18 @@ class sym_creator():
                 self.set_new_ref_atm_surf(el=[i],rn=[j],print_file=print_file)
                 #print self.sym_surf_new_ref[i][j]
             
-    def ouput_sym_file_new(self,el='O',print_file=False):
+    def ouput_sym_file_new(self,el='O',ref_N=0,print_file=False):
     #new function added after to extract sym data based on that dxdy shift at each layer won't affect dz,
     #and dz shift won't affect dxdy shift, the reference layer for atoms at one layer is now one of the atom at the same layer
-        sym_output=num.array([[0,0,0,0,0,0,0,0,0]],dtype=float)
-        for i in [0,3,6,9]:
-            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i][0:3,0:3].transpose().reshape(1,9),axis=0)
-            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i+1][0:3,0:3].transpose().reshape(1,9),axis=0)
-            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i+2][0:3,0:3].transpose().reshape(1,9),axis=0)
-        sym_output=sym_output[1::]
+    #Each row in the output file: dx1_f,dy1_f,dz1_f(0),dx2_f,dy2_f,dz2_f(0),dx3_f(0),dy3_f(0),dz3_f(1) 
+    #the fact is: dx will change dx1(=dx*dx1_f) dy1(=dx*dy1_f) and dz1(=dx*dz1_f), dy will change dx2 dy2 and dz2, dz will change dx3 dy3 and dz3
+    #eg (dx1_f=0.1,dy1_f=0.2, dz1_f=0.3,dx=1)-->(dx1=0.1,dy1=0.2,dz1=0.3)
+        sym_output=num.array([[0,0,0,0,0,0,0,0,0]],dtype=float)[0:0]
+        for i in range(len(self.sym_surf_new_ref[el][ref_N])):
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][ref_N][i][0:3,0:3].transpose().reshape(1,9),axis=0)
+        sym_output[:,-1]=1.#set dz3_f to 1
         for i in range(len(sym_output)):
-            for j in [2,5,6,7]:
+            for j in [2,5,6,7]:#set dz1_f dz2_f dx3_f and dy3_f to 0.
                 sym_output[i][j]=0.
         if print_file==True:num.savetxt(el+' output file for Genx reading.txt', sym_output, delimiter=',')
         return sym_output
