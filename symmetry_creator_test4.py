@@ -229,6 +229,25 @@ class sym_creator():
                     file.write(s)
             file.close()
 
+def test():
+    bulk_cell=[5.038,5.038,13.772]
+    surf_cell=[5.038,5.434,7.3707]
+    #basis vector of surface unit cell expressed in bulk unit cell
+    bulk_to_surf=[[1.,1.,0.],[-0.3333,0.333,0.333],[0.713,-0.713,0.287]]
+    #asymmetry atoms
+    asym_atm={'Fe':(0.,0.,0.3553),'O':(0.3059,0.,0.25)}
+    #symmetry operations copy from cif file
+    sym_file='D:\\Programming codes\\geometry codes\\symmetry-creator\\symmetry of hematite.txt'
+    test=sym_creator(bulk_cell=bulk_cell,surf_cell=surf_cell,bulk_to_surf=bulk_to_surf,asym_atm=asym_atm,sym_file=sym_file)
+    #express the symmetry operations in form of matrix (3 by 4, rotation+shift)
+    test.create_bulk_sym()
+    #generate p1 atoms in the bulk unit cell
+    test.find_atm_bulk()
+    #generate p1 atoms in the surface unit cell, and at the same time generate the symmetry operations for each atom, expressed in array (3 by 4)
+    test.find_atm_surf()
+    test.set_ref_all()
+    return test
+        
 def make_script(filename='Y:\\codes\\my code\\modeling files\\hematitesurf_xyz_fract.txt',domains=2,u={'Fe':0.32,'O':0.33},element={'Fe':0,'O':0},delta={'delta1':0.,'delta2':0.1391}):
     f=open(filename)
     fl=f.readlines()
@@ -274,7 +293,7 @@ if __name__=='__main__':
     #asymmetry atoms
     asym_atm={'Fe':(0.,0.,0.3553),'O':(0.3059,0.,0.25)}
     #symmetry operations copy from cif file
-    sym_file='c:\\python26\\symmetry of hematite.txt'
+    sym_file='D:\\Programming codes\\geometry codes\\symmetry-creator\\symmetry of hematite.txt'
     test=sym_creator(bulk_cell=bulk_cell,surf_cell=surf_cell,bulk_to_surf=bulk_to_surf,asym_atm=asym_atm,sym_file=sym_file)
     #express the symmetry operations in form of matrix (3 by 4, rotation+shift)
     test.create_bulk_sym()
