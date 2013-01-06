@@ -166,6 +166,28 @@ class sym_creator():
         if print_file==True:num.savetxt(el+' output file for Genx reading.txt', sym_output, delimiter=',')
         return sym_output
     
+    def output_sym_file_layer_basis(self,el='O',print_file=False):
+    #sym opts on layer basis:one atom at each layer will be selected as the reference atom to cal the other atom at the same layer
+    #in other words we group atoms at the same layer, atoms of different layer are moved independently.
+    
+        sym_output=num.array([[0,0,0,0,0,0,0,0,0]],dtype=float)[0:0]
+        N=len(self.sym_surf_new_ref[el][0])
+        for i in range(0,N/2-1,2):
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i][0:3,0:3].transpose().reshape(1,9),axis=0)
+            sym_output=num.append(sym_output,self.sym_surf_new_ref[el][i][i+1][0:3,0:3].transpose().reshape(1,9),axis=0)
+        sym_output[:,-1]=1.#set dz3_f to 1
+        for i in range(len(sym_output)):
+            for j in [2,5,6,7]:#set dz1_f dz2_f dx3_f and dy3_f to 0.
+                sym_output[i][j]=0. 
+        #repeat for the chemically equivalent half unit cell, be careful about the labels 
+        #for O from top to bottom: O1 O2 O3 O4 O5 O6 (first half)<--|-->(second half) O8 O7 O10 O9 O12 O11 since O1 correspond to O8 and so on
+        #for Fe from top to bottom: Fe2 Fe3 Fe4 Fe6<--|--> Fe9 Fe8 Fe12 Fe10 the number is not continual for historic reasons (in old version 12 Fe atoms are calculated with 4 duplicates)
+        sym_output=num.append(sym_output,sym_output,axis=0)
+        #now repeat the whole unit cell to consider a super unit cell by stacking the other unit cell on top of one cell
+        sym_output=num.append(sym_output,sym_output,axis=0)
+        if print_file==True:num.savetxt(el+' output file for Genx reading.txt', sym_output, delimiter=',')
+        return sym_output
+        
     def cal_coor(self,ref_N,element):
     #this function is for test purpose
         asym=self.atm_p1_surf[element][ref_N]
