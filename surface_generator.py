@@ -134,9 +134,13 @@ class surface_generator():
             self.sym_surf[key]=sym_container
     
     #this function is for test purpose
-    def test_right(self,sym_opt,atm):
-        atm_new=num.dot(sym_opt[0:3,0:3],atm)+sym_opt[0:3,3]
-        return atm_new
+    def test_right(self,el):
+        atm=self.asym_atm_surface[el]
+        new_atm_container=[]
+        for i in range(len(self.sym_surf[el])):
+            atm_new=num.dot(self.sym_surf[el][i][0:3,0:3],atm)+self.sym_surf[el][i][0:3,3]
+            new_atm_container.append(atm_new)
+        print num.array(new_atm_container)
         
     def action(self):
         self.create_bulk_sym()
@@ -144,11 +148,30 @@ class surface_generator():
         self.find_asym_in_surface()
         self.create_surface_sym()
     #create stacked slabs with arbitrary height
-    def create_stacked_slab(self,unit_cell=None,repeat_offset=[0,0.1391,1],column_height=2,file=None):
+    def create_stacked_slab(self,unit_cell=None,repeat_offset=[0,0.1391,1],column_height=2,abc=[1,1,1],file=None):
+        abc=num.array(abc)
         stacked_slab=unit_cell[0:0]
         for i in range(column_height):
             stacked_slab=num.append(stacked_slab,unit_cell+num.array(repeat_offset)*i,axis=0)
         if file!=None:
-            num.savetxt(stacked_slab,file)
-        return stacked_slab
-            
+            num.savetxt(stacked_slab*abc,file)
+        return stacked_slab*abc
+        
+if __name__=='__main__':
+    #a,b,c for bulk and surface unit cell
+    bulk_cell=[5.038,5.038,13.772]
+    surf_cell=[5.038,5.434,7.3707]
+    #basis vector of surface unit cell expressed in bulk unit cell
+    bulk_to_surf=[[1.,1.,0.],[-0.3333,0.333,0.333],[0.713,-0.713,0.287]]
+    #asymmetry atoms
+    asym_atm={'Fe':(0.,0.,0.3553),'O':(0.3059,0.,0.25)}
+    #symmetry operations copy from cif file
+    sym_file='D:\\Programming codes\\geometry codes\\symmetry-creator\\symmetry of hematite.txt'
+    test=surface_generator.surface_generator(bulk_cell=bulk_cell,surf_cell=surf_cell,bulk_to_surf=bulk_to_surf,asym_atm=asym_atm,sym_file=sym_file)
+    #you can print variables in test now
+    print test.atm_p1_bulk #print atom coordinates in bulk cell
+    print test.atm_p1_surf #print atom coordinates in surface cell
+    print test.sym_bulk #print symmetry operations in bulk cell (3 by 4 matrix)
+    print test.sym_surf #print symmetry operations in surface cell
+    print test.asym_atm_surface #print asymmetry atom in surface unit cell
+    print test.F #print coordinate transformation matrix (num.dot(F,coor_bulk)=coor_surface;num.dot(inv(F),coor_surface)=coor_bulk)
